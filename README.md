@@ -26,7 +26,7 @@ Ensure you have [Rust and Cargo](https://rustup.rs/) installed.
 
 ```bash
 # Clone the repository (if applicable)
-git clone <repository-url>
+git clone https://github.com/Kanishk-03-Jain/Wordle_Solver.git
 cd wordle_solver
 
 # Build the project for release (highly recommended for performance)
