@@ -1,4 +1,4 @@
-# Wordle Solver: Information Theory Engine
+# Wordle Solver
 
 A high-performance, parallelized Wordle solver written in Rust that utilizes Shannon Entropy to find the optimal guesses.
 
