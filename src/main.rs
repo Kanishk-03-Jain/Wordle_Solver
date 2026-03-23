@@ -1,8 +1,6 @@
 use serde::Deserialize;
-use std::error::Error;
 use std::fs::File;
 use std::io;
-use std::path::Path;
 
 mod engine;
 
@@ -18,6 +16,7 @@ struct WordEntry {
     probability: f64,
 }
 
+/// Loads a CSV file of words and frequency counts, converting them into a probability distribution.
 fn load_words(path: &str) -> Result<Vec<WordEntry>, Box<dyn std::error::Error>> {
     let file = File::open(path)?;
     let mut rdr = csv::Reader::from_reader(file);
@@ -44,6 +43,7 @@ fn load_words(path: &str) -> Result<Vec<WordEntry>, Box<dyn std::error::Error>> 
     Ok(entries)
 }
 
+/// Helper function to convert string input (e.g., "gybbg") into base-3
 fn parse_pattern(input: &str) -> u8 {
     let mut pattern = 0;
     let mut multiplier = 1;
@@ -61,11 +61,11 @@ fn parse_pattern(input: &str) -> u8 {
 }
 
 fn main() {
-    println!("Hello, world!");
+    println!("Initializing Information Theory Wordle Engine...");
 
     let words_result = load_words("src/final.csv");
 
-    let mut all_word_entries = match words_result {
+    let mut words_with_probabilities = match words_result {
         Ok(vec) => vec,
         Err(e) => {
             eprintln!("Failed to lead CSV: {}", e);
@@ -73,22 +73,25 @@ fn main() {
         }
     };
 
-    let all_words: Vec<String> = all_word_entries
+    let all_words: Vec<String> = words_with_probabilities
         .iter()
         .map(|entry| entry.word.clone())
         .collect();
 
     let num_answers = all_words.len();
     let num_guesses = all_words.len();
+
     let matrix = engine::generate_matrix(&all_words, &all_words);
 
-    println!("Matrix computation complete! Size: {} bytes", matrix.len());
+    println!(
+        "Matrix computation complete! Size: {} MB",
+        matrix.len() / 1_000_000
+    );
 
+    // Array of indices pointing to valid words
     let mut answers_pool: Vec<usize> = (0..num_answers).collect();
 
-    println!("Initial pool size: {}", answers_pool.len());
-
-    // Main loop
+    println!("\n=== START ===");
 
     loop {
         if answers_pool.len() == 1 {
@@ -98,30 +101,30 @@ fn main() {
             );
             break;
         } else if answers_pool.is_empty() {
-            println!(
-                "Error: No possible words left! You may have entered a pattern incorrectly."
-            );
+            println!("Error: No possible words left! You may have entered a pattern incorrectly.");
             break;
         }
 
-        println!("Thinking... (Calculating Entropy across all possible words)");
+        println!(
+            "Calculating maximum entropy across {} words...",
+            num_guesses
+        );
         let guess_idx = engine::find_best_guess(
             num_guesses,
             &matrix,
             &answers_pool,
-            &all_word_entries,
+            &words_with_probabilities,
             num_answers,
         );
-        println!(
-            "Recommended guess: {}",
-            all_words[guess_idx].to_uppercase()
-        );
+        println!("Recommended guess: {}", all_words[guess_idx].to_uppercase());
+        println!("Enter the color pattern received (e.g., gybbg):");
         let mut input_pattern = String::new();
         io::stdin()
             .read_line(&mut input_pattern)
             .expect("Failed to read input");
 
         let received_pattern = parse_pattern(&input_pattern);
+
         answers_pool = engine::filter_words(
             &matrix,
             received_pattern,
@@ -129,9 +132,9 @@ fn main() {
             answers_pool,
             num_answers,
         );
-        engine::renormalize_probabilities(&answers_pool, &mut all_word_entries);
+        engine::renormalize_probabilities(&answers_pool, &mut words_with_probabilities);
 
-        println!("---");
+        println!("----------------");
         println!("Remaining possibilities shrunk to: {}", answers_pool.len());
     }
 }

@@ -1,14 +1,17 @@
-use core::num;
-use rayon::{iter::Rev, prelude::*, vec};
-use std::error::Error;
-use std::fs::File;
-use std::path::{Path, PrefixComponent};
+use rayon::prelude::*;
 
 use crate::WordEntry;
-
+/// Evaluates a guess against a secret word and returns the Wordle pattern Id.
+///
+/// The pattern is represented as base-3 integer (0 to 242).
+/// * 0 = Gray (Not in word)
+/// * 1 = Yellow (Wrong position)
+/// * 2 = Green (Correct position)
+///
+/// Handles duplicate letter edge-cases by counting available characters in the secret.
 pub fn evaluate(guess: &str, secret: &str) -> u8 {
     let mut secret_counts = [0u8; 26];
-    let mut results = [0u8; 5]; // 0 Gray, 1: Yellow, 2: Green
+    let mut results = [0u8; 5];
 
     let g_bytes = guess.as_bytes();
     let s_bytes = secret.as_bytes();
@@ -33,11 +36,14 @@ pub fn evaluate(guess: &str, secret: &str) -> u8 {
     }
 
     // Convert to base-3 number
-    // pattern = r0 + r1*3 + r2*9 + r3 * 27 + r4 * 81
     let pattern = results[0] + results[1] * 3 + results[2] * 9 + results[3] * 27 + results[4] * 81;
     pattern
 }
 
+/// Pre-compute the entire game space into a flat 1D array.
+///
+/// Distribute the workload across all CPU cores.
+/// Returns a byte array where index = (guess_idx * num_secrets) + secret_idx.
 pub fn generate_matrix(guesses: &[String], secrets: &[String]) -> Vec<u8> {
     let num_guesses = guesses.len();
     let num_secrets = secrets.len();
@@ -49,7 +55,6 @@ pub fn generate_matrix(guesses: &[String], secrets: &[String]) -> Vec<u8> {
         num_guesses, num_secrets
     );
 
-    // Parallel iterate over every guess (row)
     matrix
         .par_chunks_mut(num_secrets)
         .enumerate()
@@ -64,6 +69,7 @@ pub fn generate_matrix(guesses: &[String], secrets: &[String]) -> Vec<u8> {
     matrix
 }
 
+/// Shrink the pool of possible answers based on the feedback pattern received.
 pub fn filter_words(
     matrix: &[u8],
     received_pattern: u8,
@@ -76,6 +82,7 @@ pub fn filter_words(
     answers_pool
 }
 
+/// Re-balance the probability distribution of the remaining possible answers.
 pub fn renormalize_probabilities(
     answers_pool: &[usize],
     words_with_probabilities: &mut [WordEntry],
@@ -85,15 +92,14 @@ pub fn renormalize_probabilities(
         .map(|&idx| words_with_probabilities[idx].probability)
         .sum();
 
-    if total_weight <= 0.0 {
-        return;
-    }
-
-    for &idx in answers_pool {
-        words_with_probabilities[idx].probability /= total_weight;
+    if total_weight > 0.0 {
+        for &idx in answers_pool {
+            words_with_probabilities[idx].probability /= total_weight;
+        }
     }
 }
 
+/// Calculates the Shannon Entropy (Expected Information) for a single guess.
 pub fn calculate_entropy(
     matrix: &[u8],
     answers_pool: &[usize],
@@ -109,9 +115,7 @@ pub fn calculate_entropy(
         pattern_probabilites[pattern as usize] += words_with_probabilities[answer_idx].probability;
     }
 
-    // Shanon Entropy
     let mut entropy: f64 = 0.0;
-
     for &p in &pattern_probabilites {
         if p > 0.0 {
             entropy += -p * p.log2();
@@ -120,6 +124,7 @@ pub fn calculate_entropy(
     entropy
 }
 
+/// Scans the entire dictionary to find the guess that yields the highest entropy.
 pub fn find_best_guess(
     num_guesses: usize,
     matrix: &[u8],
