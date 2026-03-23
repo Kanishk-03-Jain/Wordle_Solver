@@ -16,10 +16,11 @@ struct WordEntry {
     probability: f64,
 }
 
-/// Loads a CSV file of words and frequency counts, converting them into a probability distribution.
-fn load_words(path: &str) -> Result<Vec<WordEntry>, Box<dyn std::error::Error>> {
-    let file = File::open(path)?;
-    let mut rdr = csv::Reader::from_reader(file);
+/// Loads words and frequency counts, converting them into a probability distribution.
+fn load_words_from_memory(csv_data: &str) -> Result<Vec<WordEntry>, Box<dyn std::error::Error>> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(csv_data.as_bytes());
 
     let mut raw_data: Vec<RawWord> = Vec::new();
     let mut total_count: u64 = 0;
@@ -63,7 +64,8 @@ fn parse_pattern(input: &str) -> u8 {
 fn main() {
     println!("Initializing Information Theory Wordle Engine...");
 
-    let words_result = load_words("src/final.csv");
+    let csv_text = include_str!("final.csv");
+    let words_result = load_words_from_memory(csv_text);
 
     let mut words_with_probabilities = match words_result {
         Ok(vec) => vec,
