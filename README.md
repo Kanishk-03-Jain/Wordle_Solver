@@ -2,7 +2,7 @@
 
 A high-performance, parallelized Wordle solver written in Rust that utilizes Shannon Entropy to find the optimal guesses.
 
-This project is designed to solve Wordle by computing the expected information gain (entropy) for every possible guess, balancing word frequency probabilities to mirror how humans naturally prioritize more common words.
+This project is designed to solve [Wordle](https://www.nytimes.com/games/wordle/index.html) by computing the expected information gain (entropy) for every possible guess, balancing word frequency probabilities to mirror how humans naturally prioritize more common words.
 
 ## Features
 
@@ -10,6 +10,10 @@ This project is designed to solve Wordle by computing the expected information g
 - **Parallel Computing:** Heavily leverages the `rayon` crate to parallelize the matrix generation and entropy calculations across all available CPU cores.
 - **Frequency-Aware:** Evaluates word probabilities based on their real-world usage frequencies, improving practical guessing efficiency.
 - **Pre-computed Game Space:** Pre-computes the entire game matrix (every possible guess vs. every possible answer) for lightning-fast querying.
+
+## Quick Start (Pre-compiled Binaries)
+
+You do not need to install Rust to run this solver. You can download the standalone executable directly from the [Releases page](https://github.com/Kanishk-03-Jain/Wordle_Solver/releases).
 
 ## How It Works
 
