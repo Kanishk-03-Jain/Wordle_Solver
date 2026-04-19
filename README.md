@@ -4,6 +4,10 @@ A high-performance, parallelized Wordle solver written in Rust that utilizes Sha
 
 This project is designed to solve [Wordle](https://www.nytimes.com/games/wordle/index.html) by computing the expected information gain (entropy) for every possible guess, balancing word frequency probabilities to mirror how humans naturally prioritize more common words.
 
+## Demo
+
+<video src="assets/wordle_demo.mov" width="100%" controls="controls" muted="muted"></video>
+
 ## Features
 
 - **Information Theory (Shannon Entropy) Approach:** Calculates the optimal guess by maximizing the expected information gain.
