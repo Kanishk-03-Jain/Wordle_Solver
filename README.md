@@ -6,7 +6,7 @@ This project is designed to solve [Wordle](https://www.nytimes.com/games/wordle/
 
 ## Demo
 
-<video src="assets/wordle_demo.mov" width="100%" controls="controls" muted="muted"></video>
+https://github.com/Kanishk-03-Jain/Wordle_Solver/raw/main/assets/wordle_demo.mov
 
 ## Features
 
