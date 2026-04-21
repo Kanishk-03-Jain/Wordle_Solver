@@ -1,3 +1,7 @@
+
+
+
+
 # Wordle Solver
 
 A high-performance, parallelized Wordle solver written in Rust that utilizes Shannon Entropy to find the optimal guesses.
@@ -6,7 +10,7 @@ This project is designed to solve [Wordle](https://www.nytimes.com/games/wordle/
 
 ## Demo
 
-https://github.com/user-attachments/assets/ba9fc3ce-0377-4143-b123-d6fa79bf3eca
+https://github.com/user-attachments/assets/5953a736-71d6-4f59-b188-e66c06278647
 
 ## Features
 
